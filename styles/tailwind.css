@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+#nprogress .bar {
+  background: #db2777;
+  height: 3px;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px #db2777, 0 0 5px #db2777;
+}
+
+#nprogress .spinner-icon {
+  border-top-color: #db2777;
+  border-left-color: #db2777;
+}
