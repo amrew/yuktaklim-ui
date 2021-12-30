@@ -3,7 +3,7 @@ type Props = {
   badge?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-  size?: "lg" | "xl" | "2xl" | "3xl" | "4xl";
+  size?: "text-lg" | "text-xl" | "text-2xl" | "text-3xl" | "text-4xl";
 };
 
 export function Heading(props: Props) {
@@ -12,13 +12,11 @@ export function Heading(props: Props) {
     children,
     as: Tag = "h1",
     className = "",
-    size = "2xl",
+    size = "text-2xl",
   } = props;
   return (
     <div className="flex gap-4siz items-center">
-      <Tag className={`font-semibold ${className} text-${size}`}>
-        {children}
-      </Tag>
+      <Tag className={`font-semibold ${className} ${size}`}>{children}</Tag>
       {badge}
     </div>
   );

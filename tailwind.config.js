@@ -30,9 +30,11 @@ module.exports = {
         "danger-light": "#ffd3cf",
         danger: "#f9374b",
         "danger-dark": "#772528",
+
+        google: "#DB4437",
       },
     },
   },
   variants: {},
-  plugins: [require("@tailwindcss/line-clamp")],
+  plugins: [require("@tailwindcss/line-clamp"), require("@tailwindcss/forms")],
 };

@@ -41,12 +41,18 @@ export function TodayCourseCard(props: Props) {
             />
           )}
         </div>
-        <p className="flex items-center gap-1 whitespace-nowrap overflow-hidden text-ellipsis font-light">
-          <UserIcon className="text-teal-500" />
-          {author}
-        </p>
+        <div className="flex items-center gap-1 font-light">
+          <div className="w-4">
+            <UserIcon className="text-teal-500" />
+          </div>
+          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {author}
+          </p>
+        </div>
         <div className="flex gap-1 mt-1">
-          <TimeIcon className="text-teal-500" />
+          <div className="w-4">
+            <TimeIcon className="text-teal-500" />
+          </div>
           <time className="font-semibold text-xs">
             {startTime} - {endTime} WIB
           </time>

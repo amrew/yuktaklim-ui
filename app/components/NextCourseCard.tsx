@@ -21,20 +21,29 @@ export function NextCourseCard(props: Props) {
   const dayMonth = dateWithI18n.format("DD MMM");
   return (
     <div className="flex items-center gap-4 bg-white border border-gray-200 p-4 rounded-md mt-4">
-      <div className="border border-orange-400 rounded-md py-2 px-4 text-center shadow-sm w-24">
+      <div className="border border-orange-400 rounded-md py-2 px-3 text-center shadow-sm w-20">
         <h3 className="text-sm text-gray-500 mb-1">
           {dayInWeek === "Minggu" ? "Ahad" : dayInWeek}
         </h3>
-        <time className="text-lg font-bold">{dayMonth}</time>
+        <time className="font-bold">{dayMonth}</time>
       </div>
-      <div className="flex flex-col flex-1">
-        <p className="flex-1 font-semibold">{title}</p>
-        <p className="flex items-center gap-1 text-sm mt-1">
-          <UserIcon className="text-teal-500" /> {author}
+      <div className="flex flex-col flex-1 whitespace-nowrap overflow-hidden">
+        <p className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+          {title}
         </p>
+        <div className="flex items-center gap-1 font-light">
+          <div className="w-4">
+            <UserIcon className="text-teal-500" />
+          </div>
+          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {author}
+          </p>
+        </div>
         <div className="flex gap-1 mt-1">
-          <TimeIcon className="text-teal-500" />
-          <time className="font-semibold text-xs">
+          <div className="w-4">
+            <TimeIcon className="text-teal-500" />
+          </div>
+          <time className="font-semibold text-xs whitespace-nowrap overflow-hidden text-ellipsis">
             {startTime} - {endTime} WIB
           </time>
         </div>

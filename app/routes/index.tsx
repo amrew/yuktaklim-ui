@@ -32,7 +32,7 @@ export default function Index() {
   const nextCourses = [
     {
       title: "Kitab Tauhid",
-      author: "Ustadz Abdullah TD",
+      author: "Ustadz Abdullah TD Testing",
       startTime: "19:00",
       endTime: "20:00",
       date: "2022-01-01",
@@ -64,7 +64,7 @@ export default function Index() {
             ))}
           </section>
           <section className="py-2 px-2">
-            <Heading as="h2" size="lg">
+            <Heading as="h2" size="text-lg">
               Kelas Selanjutnya
             </Heading>
             {nextCourses.map((course) => (
