@@ -4,8 +4,22 @@ import { Heading } from "~/components/Heading";
 import { TodayCourseCard } from "~/components/TodayCourseCard";
 import { NextCourseCard } from "~/components/NextCourseCard";
 import { Footer } from "~/components/Footer";
+import { json, LoaderFunction, MetaFunction, useLoaderData } from "remix";
+import { User } from "@supabase/supabase-js";
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Kajian online - Yuktaklim!",
+    description: "Belajar sunnah online bersama asatidzah ahlussunnah",
+  };
+};
+
+export const loader: LoaderFunction = async (ctx) => {
+  return json({});
+};
 
 export default function Index() {
+  const { user } = useLoaderData<{ user: User | null }>();
   const todayCourses = [
     {
       title: "Durushullugoh Jilid 1",
