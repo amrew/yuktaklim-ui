@@ -4,98 +4,48 @@ import {
   BiHeadphone as HeadphoneIcon,
   BiStop as StopIcon,
 } from "react-icons/bi";
-import { Howl } from "howler";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { Container } from "~/components/Container";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { Heading } from "~/components/Heading";
-import { json, LoaderFunction, useLoaderData } from "remix";
-import { usePrevious } from "react-use";
+import { json, LoaderFunction, MetaFunction } from "remix";
+import { getRadios, Radio } from "~/services/radioService";
+import { useAudioState } from "~/hooks/useAudioState";
+import { useInfiniteLoaderData } from "~/hooks/useInfiniteLoaderData";
 
-type Radio = {
-  uid_rad: string;
-  uid_ref: string;
-  id_radet: string;
-  sc_rad: string;
-  nama: string;
-  status: string;
-  info: string;
-  pendengar: string;
-  judul: string;
-  logo: string;
-  url: string;
-  kab: string;
-  prop: string;
-  neg: string;
-  alias: string;
+type LoaderData = {
+  items: Radio[];
+  page: number;
+  totalItem: number;
 };
 
-export const loader: LoaderFunction = async () => {
-  const response = await fetch(
-    "https://hirsh.radioislam.or.id/radio/lrii.php?model=lima"
-  );
-  const radios: Radio[] = await response.json();
-  const sortedRadios = radios.sort((a, b) =>
-    Number(a.pendengar) > Number(b.pendengar) ? -1 : 1
-  );
-  const limitedRadios = sortedRadios.slice(0, 20);
-  return json({ radios: limitedRadios });
+export const loader: LoaderFunction = async ({ request }) => {
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get("page") || 1);
+
+  const { radios: items, totalItem } = await getRadios({ page, limit: 10 });
+  return json({ items, page, totalItem });
 };
 
-type AudioState =
-  | { type: "idle" }
-  | { type: "loading"; url: string }
-  | { type: "loaded"; url: string }
-  | { type: "playing"; url: string };
+export const meta: MetaFunction = () => {
+  return {
+    title: "Radio Islam Indonesia - Yuktaklim!",
+    description: "Radio Islam Indonesia. Radio Sunnah. Radio Ahlussunnah",
+  };
+};
 
 export default function Radio() {
-  const { radios } = useLoaderData<{ radios: Radio[] }>();
+  const { items, isRefetching, totalItem, page, fetchMore } =
+    useInfiniteLoaderData<LoaderData>({
+      update: (prev, next) => ({
+        ...next,
+        items: [...prev.items, ...next.items],
+      }),
+    });
+  const hasMore = items.length < totalItem;
 
-  const [audioState, setAudioState] = useState<AudioState>({ type: "idle" });
-
-  const isLoading = audioState.type === "loading";
-  const currentURL = audioState.type !== "idle" ? audioState.url : undefined;
-
-  const prevURL = usePrevious(currentURL);
-
-  const playStop = (url: string) => {
-    switch (audioState.type) {
-      case "idle": {
-        setAudioState({ type: "loading", url });
-        break;
-      }
-      default: {
-        if (audioState.url === url) {
-          setAudioState({ type: "idle" });
-        } else {
-          setAudioState({ type: "loading", url });
-        }
-      }
-    }
-  };
-
-  useEffect(() => {
-    let sound: Howl | undefined;
-    if (currentURL) {
-      sound = new Howl({
-        src: `${currentURL}/;stream.mp3u`,
-        html5: true,
-        format: ["mp3", "mp3u"],
-        onload: () => {
-          setAudioState({ type: "loaded", url: currentURL });
-        },
-        onplay: () => {
-          setAudioState({ type: "playing", url: currentURL });
-        },
-      });
-      sound.play();
-    }
-    return () => {
-      sound?.stop();
-      sound?.unload();
-    };
-  }, [currentURL]);
+  const { currentURL, isLoading, playOrStop } = useAudioState();
 
   return (
     <div className="flex h-full flex-col bg-gray-100">
@@ -104,57 +54,71 @@ export default function Radio() {
         <Container>
           <section className="py-4 px-2">
             <Heading as="h2">Radio Islam Indonesia</Heading>
-            {radios.map((radio) => (
-              <article
-                key={radio.uid_rad}
-                className={`mt-4 py-3 px-4 rounded-md flex gap-4 border shadow-sm bg-white border-gray-200 ${
-                  currentURL === radio.url
-                    ? "border-orange-400"
-                    : "border-gray-200"
-                }`}
-              >
-                <div className="flex flex-col items-center">
-                  <img
-                    src={radio.logo}
-                    width={48}
-                    height={48}
-                    className="rounded-lg"
-                  />
-                  <span className="flex gap-1 items-center text-xs mt-2">
-                    <HeadphoneIcon />
-                    {radio.pendengar}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">{radio.nama}</h3>
-                  <p className="line-clamp-2">{radio.judul}</p>
-                </div>
-                <div className="self-center">
-                  <button
-                    className={`flex items-center py-1 px-2 shadow-sm text-sm rounded-md border ${
-                      !isLoading && currentURL === radio.url
-                        ? "bg-red-400 text-white border-none shadow-sm"
-                        : ""
-                    }`}
-                    onClick={() => {
-                      playStop(radio.url);
-                    }}
-                  >
-                    {isLoading && currentURL === radio.url ? (
-                      <LoaderIcon className="animate-spin" size={16} />
-                    ) : currentURL === radio.url ? (
-                      <Fragment>
-                        Stop <StopIcon size={16} />
-                      </Fragment>
-                    ) : (
-                      <Fragment>
-                        Play <PlayIcon size={16} />
-                      </Fragment>
-                    )}
-                  </button>
-                </div>
-              </article>
-            ))}
+            {items.map((radio) => {
+              const radioURL = `${radio.audioInfo.url}/;stream.mp3u`;
+              const selected = currentURL === radioURL;
+              return (
+                <article
+                  key={radio.id}
+                  className={`mt-4 py-3 px-4 rounded-md flex gap-4 border shadow-sm bg-white border-gray-200 ${
+                    selected ? "border-orange-400" : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={radio.logo}
+                      width={48}
+                      height={48}
+                      className="rounded-lg"
+                    />
+                    <span className="flex gap-1 items-center text-xs mt-2">
+                      <HeadphoneIcon />
+                      {radio.audioInfo.listener}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold line-clamp-2">{radio.name}</h3>
+                    <p className="line-clamp-2">{radio.audioInfo.title}</p>
+                  </div>
+                  <div className="self-center">
+                    <button
+                      className={`flex items-center py-1 px-2 shadow-sm text-sm rounded-md border ${
+                        !isLoading && selected
+                          ? "bg-red-400 text-white border-none shadow-sm"
+                          : ""
+                      }`}
+                      onClick={() => {
+                        playOrStop(radioURL);
+                      }}
+                    >
+                      {isLoading && selected ? (
+                        <LoaderIcon className="animate-spin" size={16} />
+                      ) : selected ? (
+                        <Fragment>
+                          Stop <StopIcon size={16} />
+                        </Fragment>
+                      ) : (
+                        <Fragment>
+                          Play <PlayIcon size={16} />
+                        </Fragment>
+                      )}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+            {hasMore ? (
+              <div className="mt-2 text-center">
+                <button
+                  className="py-1 px-2 shadow-sm text-sm rounded-md border bg-white"
+                  onClick={() => {
+                    fetchMore({ page: page + 1 });
+                  }}
+                >
+                  {isRefetching ? "Memuat..." : "Selanjutnya"}
+                </button>
+              </div>
+            ) : null}
           </section>
         </Container>
       </main>

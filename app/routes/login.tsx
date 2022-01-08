@@ -1,10 +1,69 @@
-import { Form, Link } from "remix";
+import {
+  ActionFunction,
+  Form,
+  json,
+  Link,
+  LoaderFunction,
+  MetaFunction,
+  redirect,
+} from "remix";
 import { Container } from "~/components/Container";
 import { Header } from "~/components/Header";
 import {
   BiLogIn as LoginIcon,
   BiUserCheck as UserCheckIcon,
 } from "react-icons/bi";
+import invariant from "tiny-invariant";
+import { hasAuthSession, supabase } from "~/utils/supabase.server";
+import { commitSession, getSession } from "~/utils/session.server";
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Login - Yuktaklim!",
+    description: "Belajar sunnah online bersama asatidzah ahlussunnah",
+  };
+};
+
+export const loader: LoaderFunction = async ({ request }) => {
+  try {
+    const session = await hasAuthSession(request);
+    return redirect("/");
+  } catch (err) {
+    return json({});
+  }
+};
+
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  invariant(typeof email === "string");
+  invariant(typeof password === "string");
+
+  const {
+    user,
+    session: userSession,
+    error,
+  } = await supabase.auth.signIn({
+    email,
+    password,
+  });
+
+  if (userSession) {
+    const session = await getSession(request.headers.get("Cookie"));
+    session.set("access_token", userSession.access_token);
+    // redirect to page with the cookie set in header
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
+
+  return redirect("/login");
+};
 
 function LoginForm() {
   return (
@@ -18,38 +77,44 @@ function LoginForm() {
           Ikuti Kajian Online Bersama Asatidzah Ahlussunnah
         </p>
       </div>
-      <Form className="mt-6 mb-8 px-6">
+      <Form method="post" className="mt-6 mb-8 px-6">
         <div>
-          <label>Email</label>
-          <input
-            type="email"
-            className="
-            mt-1
-            block
-            w-full
-            rounded-md
-            border-gray-300
-            shadow-sm
-            focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
-            "
-            placeholder="Masukkan email..."
-          />
+          <label>
+            Email
+            <input
+              type="email"
+              name="email"
+              className="
+                mt-1
+                block
+                w-full
+                rounded-md
+                border-gray-300
+                shadow-sm
+                focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+              "
+              placeholder="Masukkan email..."
+            />
+          </label>
         </div>
         <div className="mt-3">
-          <label>Password</label>
-          <input
-            type="password"
-            className="
-            mt-1
-            block
-            w-full
-            rounded-md
-            border-gray-300
-            shadow-sm
-            focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
-            "
-            placeholder="Masukkan password..."
-          />
+          <label>
+            Password
+            <input
+              type="password"
+              name="password"
+              className="
+                mt-1
+                block
+                w-full
+                rounded-md
+                border-gray-300
+                shadow-sm
+                focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+              "
+              placeholder="Masukkan password..."
+            />
+          </label>
         </div>
         <div className="mt-4 flex justify-between items-center">
           <div>
