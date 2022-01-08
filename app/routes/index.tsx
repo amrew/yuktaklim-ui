@@ -20,7 +20,6 @@ export const loader: LoaderFunction = async (ctx) => {
 
 export default function Index() {
   const { user } = useLoaderData<{ user: User | null }>();
-  console.log("index", user);
   const todayCourses = [
     {
       title: "Durushullugoh Jilid 1",

@@ -38,8 +38,6 @@ export const action: ActionFunction = async ({ request }) => {
   if (!password) errors.password = true;
   if (password !== passwordConf) errors.passwordConf = true;
 
-  console.log(email, name, password);
-
   if (Object.keys(errors).length) {
     return errors;
   }
@@ -51,8 +49,6 @@ export const action: ActionFunction = async ({ request }) => {
     email,
     password,
   });
-
-  console.log(user, session, error);
 
   return redirect("/register");
 };
