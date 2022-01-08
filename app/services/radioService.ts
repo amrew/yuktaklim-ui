@@ -62,7 +62,7 @@ export async function getRadios({
   const offset = (page - 1) * limit;
 
   const response = await fetch(
-    "https://hirsh.radioislam.or.id/radio/lrii.php?model=lima"
+    `${process.env.RII_ENDPOINT}/radio/lrii.php?model=lima`
   );
   const rawRadios: RawRadio[] = await response.json();
   const radios = rawRadios.map(rawToRadio);
