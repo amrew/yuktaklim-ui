@@ -7,11 +7,13 @@ import {
 } from "react-icons/bi";
 
 type Props = {
+  id: string;
   title: string;
   author: string;
   startTime: string;
   endTime: string;
   disabled?: boolean;
+  onJoin: (id: string) => void;
 };
 
 export function TodayCourseCard(props: Props) {
@@ -65,6 +67,7 @@ export function TodayCourseCard(props: Props) {
         <button
           disabled={disabled}
           className={`flex items-center py-1 px-2 shadow-sm text-sm rounded-md border ${buttonClass}`}
+          onClick={() => props.onJoin(props.id)}
         >
           Gabung
           <ChevronRightIcon size={16} />

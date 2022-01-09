@@ -4,14 +4,12 @@ import {
   BiMicrophone as MicIcon,
   BiMicrophoneOff as MicOffIcon,
   BiPowerOff as ExitIcon,
-  BiUser as UserIcon,
 } from "react-icons/bi";
-import { Link } from "remix";
 import { Header } from "~/components/Header";
 
 function Nav() {
   return (
-    <nav className="bg-white flex flex-col xs:border-b xs:border-b-gray-200 sm:border-l sm:border-l-gray-200 sm:w-80 h-full">
+    <nav className="bg-white flex flex-col flex-1 sm:flex-none xs:border-b xs:border-b-gray-200 sm:border-l sm:border-l-gray-200 sm:w-80 h-full">
       <Tab.Group>
         <Tab.List className="p-1 flex border-b border-b-gray-200">
           <Tab as={Fragment}>
@@ -124,6 +122,7 @@ function Nav() {
 }
 
 function Main() {
+  const intervalResizeID = useRef<NodeJS.Timeout>();
   const [size, setSize] = useState<{ width: number; height: number }>({
     width: 0,
     height: 0,
@@ -132,13 +131,17 @@ function Main() {
   const boxRef = useRef<HTMLDivElement>(null);
   const setBoxSize = () => {
     resetSize();
-    setTimeout(() => {
+    if (intervalResizeID.current) {
+      clearTimeout(intervalResizeID.current);
+    }
+    intervalResizeID.current = setTimeout(() => {
       if (boxRef.current) {
         setSize({
           width: boxRef.current.clientWidth,
           height: boxRef.current.clientHeight,
         });
       }
+      intervalResizeID.current = undefined;
     }, 0);
   };
 
@@ -147,32 +150,32 @@ function Main() {
     window.addEventListener("resize", setBoxSize);
     return () => {
       window.removeEventListener("resize", setBoxSize);
+      if (intervalResizeID.current) {
+        clearTimeout(intervalResizeID.current);
+      }
     };
   }, []);
 
   return (
     <div className="flex flex-1 flex-col sm:flex-row">
-      <main className="flex flex-col flex-1 bg-gray-100">
+      <main className="flex flex-col bg-gray-100" style={{ flex: 2 }}>
         <div
-          className="bg-white border border-gray-200 flex-1 rounded-lg h-full overflow-hidden m-4"
+          className="bg-white border border-gray-200 flex-1 overflow-hidden w-full h-full"
           ref={boxRef}
         >
-          {size.width ? (
-            <iframe
-              src="https://excalidraw.com/#room=c999ebe08a0901f06f26,3yZ4EhdS0ofkZBSTW3LKNg"
-              width={size.width}
-              height={size.height}
-            />
-          ) : null}
+          <iframe
+            src="https://excalidraw.com/#room=2284e92679a96827ab0b,E1SHqDSeszVj9mkgKTZp5g"
+            style={{ width: "100%", height: "100%" }}
+          />
         </div>
-        <Footer />
+        <ConferenceFooter />
       </main>
       <Nav />
     </div>
   );
 }
 
-function Footer() {
+function ConferenceFooter() {
   return (
     <footer className="flex bg-gray-600 p-4 border-t border-t-gray-200 justify-center">
       <button className="border-gray-200 border p-2 bg-white rounded-full">

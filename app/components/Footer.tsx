@@ -3,32 +3,36 @@ import {
   BiRadio as RadioIcon,
   BiNews as ArticleIcon,
 } from "react-icons/bi";
-import { Link } from "remix";
+import { Link, NavLink } from "remix";
 import { Container } from "./Container";
 
-export function Footer() {
+type Props = {};
+
+const menus = [
+  { title: "Online", icon: () => <LiveIcon size={16} />, to: "/" },
+  { title: "Radio", icon: () => <RadioIcon size={16} />, to: "/radio" },
+  { title: "Artikel", icon: () => <ArticleIcon size={16} />, to: "/article" },
+];
+
+export function Footer(props: Props) {
   return (
     <footer className="bg-white border-t border-t-gray-200">
       <Container>
         <nav className="flex">
-          <Link
-            to="/"
-            className="flex flex-col justify-center items-center flex-1 p-2 text-center text-xs text-teal-600"
-          >
-            <LiveIcon size={16} />
-            <small>Online</small>
-          </Link>
-          <Link
-            to="/radio"
-            className="flex flex-col justify-center items-center flex-1 p-2 text-center text-xs"
-          >
-            <RadioIcon size={16} />
-            <small>Radio</small>
-          </Link>
-          <div className="flex flex-col justify-center items-center flex-1 p-2 text-center text-xs">
-            <ArticleIcon size={16} />
-            <small>Artikel</small>
-          </div>
+          {menus.map((menu) => (
+            <NavLink
+              key={menu.title}
+              to={menu.to}
+              className={({ isActive }) =>
+                `flex flex-col justify-center items-center flex-1 p-2 text-center text-xs ${
+                  isActive ? "text-teal-600" : ""
+                }`
+              }
+            >
+              {menu.icon()}
+              <small>{menu.title}</small>
+            </NavLink>
+          ))}
         </nav>
       </Container>
     </footer>

@@ -7,25 +7,35 @@ type AudioState =
   | { type: "loaded"; url: string }
   | { type: "playing"; url: string };
 
+type isNowPlaying = boolean;
+
 export function useAudioState() {
   const [audioState, setAudioState] = useState<AudioState>({ type: "idle" });
 
   const isLoading = audioState.type === "loading";
   const isPlaying = audioState.type === "playing";
   const isLoaded = audioState.type === "loaded";
+
   const currentURL = audioState.type !== "idle" ? audioState.url : undefined;
 
-  const playOrStop = (url: string) => {
+  const playOrStop = (url: string | undefined): isNowPlaying => {
+    if (!url) {
+      setAudioState({ type: "idle" });
+      return true;
+    }
+
     switch (audioState.type) {
       case "idle": {
         setAudioState({ type: "loading", url });
-        break;
+        return false;
       }
       default: {
         if (audioState.url === url) {
           setAudioState({ type: "idle" });
+          return true;
         } else {
           setAudioState({ type: "loading", url });
+          return false;
         }
       }
     }
