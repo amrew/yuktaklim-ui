@@ -3,7 +3,13 @@ type Props = {
   badge?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-  size?: "text-lg" | "text-xl" | "text-2xl" | "text-3xl" | "text-4xl";
+  size?:
+    | "text-md"
+    | "text-lg"
+    | "text-xl"
+    | "text-2xl"
+    | "text-3xl"
+    | "text-4xl";
 };
 
 export function Heading(props: Props) {

@@ -1,18 +1,14 @@
-import {
-  BiPlay as PlayIcon,
-  BiLoader as LoaderIcon,
-  BiHeadphone as HeadphoneIcon,
-  BiStop as StopIcon,
-} from "react-icons/bi";
-import { Fragment } from "react";
 import { Container } from "~/components/Container";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { Heading } from "~/components/Heading";
-import { json, LoaderFunction, MetaFunction } from "remix";
+import { json, Link, LoaderFunction, MetaFunction } from "remix";
 import { getRadios, Radio } from "~/services/radioService";
 import { useAudioState } from "~/hooks/useAudioState";
-import { useInfiniteLoaderData } from "~/hooks/useInfiniteLoaderData";
+import { useLoaderData } from "~/hooks/useLoaderData";
+import { RadioItem } from "~/components/RadioItem";
+import { BiRefresh as RefreshIcon, BiStop } from "react-icons/bi";
+import { useMemo, useState } from "react";
 
 type LoaderData = {
   items: Radio[];
@@ -23,105 +19,121 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get("page") || 1);
+  const limit = Number(url.searchParams.get("limit") || 15);
 
-  const { radios: items, totalItem } = await getRadios({ page, limit: 10 });
+  const { radios: items, totalItem } = await getRadios({ page, limit });
   return json({ items, page, totalItem });
 };
 
 export const meta: MetaFunction = () => {
   return {
     title: "Radio Islam Indonesia - Yuktaklim!",
-    description: "Radio Islam Indonesia. Radio Sunnah. Radio Ahlussunnah",
+    description:
+      "Radio Islam Indonesia. Radio Sunnah. Radio Ahlussunnah. Kajian Sunnah",
   };
 };
 
 export default function Radio() {
   const { items, isRefetching, totalItem, page, fetchMore } =
-    useInfiniteLoaderData<LoaderData>({
+    useLoaderData<LoaderData>({
       update: (prev, next) => ({
         ...next,
         items: [...prev.items, ...next.items],
       }),
     });
-  const hasMore = items.length < totalItem;
+  const [selectedID, setRadioID] = useState<string>();
 
+  const selectedRadio = useMemo(() => {
+    if (selectedID) {
+      return items.find((item) => item.id === selectedID);
+    }
+    return undefined;
+  }, [selectedID]);
+
+  const hasMore = items.length < totalItem;
   const { currentURL, isLoading, playOrStop } = useAudioState();
 
   return (
     <div className="flex h-full flex-col bg-gray-100">
       <Header />
+
       <main className="flex flex-1 flex-col h-full overflow-auto">
         <Container>
           <section className="py-4 px-2">
-            <Heading as="h2">Radio Islam Indonesia</Heading>
-            {items.map((radio) => {
-              const radioURL = `${radio.audioInfo.url}/;stream.mp3u`;
-              const selected = currentURL === radioURL;
-              return (
-                <article
-                  key={radio.id}
-                  className={`mt-4 py-3 px-4 rounded-md flex gap-4 border shadow-sm bg-white border-gray-200 ${
-                    selected ? "border-orange-400" : "border-gray-200"
-                  }`}
+            <Heading
+              as="h2"
+              badge={
+                <Link
+                  to="/radio"
+                  className="ml-2 bg-white border border-gray-200 p-1 rounded-full"
                 >
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={radio.logo}
-                      width={48}
-                      height={48}
-                      className="rounded-lg"
-                    />
-                    <span className="flex gap-1 items-center text-xs mt-2">
-                      <HeadphoneIcon />
-                      {radio.audioInfo.listener}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold line-clamp-2">{radio.name}</h3>
-                    <p className="line-clamp-2">{radio.audioInfo.title}</p>
-                  </div>
-                  <div className="self-center">
-                    <button
-                      className={`flex items-center py-1 px-2 shadow-sm text-sm rounded-md border ${
-                        !isLoading && selected
-                          ? "bg-red-400 text-white border-none shadow-sm"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        playOrStop(radioURL);
-                      }}
-                    >
-                      {isLoading && selected ? (
-                        <LoaderIcon className="animate-spin" size={16} />
-                      ) : selected ? (
-                        <Fragment>
-                          Stop <StopIcon size={16} />
-                        </Fragment>
-                      ) : (
-                        <Fragment>
-                          Play <PlayIcon size={16} />
-                        </Fragment>
-                      )}
-                    </button>
-                  </div>
-                </article>
+                  <RefreshIcon size={20} />
+                </Link>
+              }
+            >
+              Radio Islam
+            </Heading>
+            {items.map((item) => {
+              const audioURL = `${item.audioInfo.url}/;stream.mp3u`;
+              const selected = currentURL === audioURL;
+              const handlePlayOrStop = (url: string) => {
+                const isPlaying = playOrStop(url);
+                isPlaying ? setRadioID(undefined) : setRadioID(item.id);
+              };
+              return (
+                <RadioItem
+                  key={item.id}
+                  name={item.name}
+                  selected={selected}
+                  logo={item.logo}
+                  audioTitle={item.audioInfo.title}
+                  audioURL={audioURL}
+                  listener={item.audioInfo.listener}
+                  isLoading={isLoading}
+                  onPlayOrStop={handlePlayOrStop}
+                />
               );
             })}
             {hasMore ? (
               <div className="mt-2 text-center">
-                <button
+                <Link
+                  to={`/radio?page=${page + 1}`}
                   className="py-1 px-2 shadow-sm text-sm rounded-md border bg-white"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     fetchMore({ page: page + 1 });
                   }}
                 >
                   {isRefetching ? "Memuat..." : "Selanjutnya"}
-                </button>
+                </Link>
               </div>
             ) : null}
           </section>
         </Container>
       </main>
+
+      {selectedRadio ? (
+        <div className="p-4 flex gap-3 items-center bg-red-400 border-t border-t-red-500 text-white">
+          <div>
+            <button
+              className="bg-white rounded-full p-2"
+              onClick={() => {
+                playOrStop(undefined);
+                setRadioID(undefined);
+              }}
+            >
+              <BiStop className="text-gray-600" size={20} />
+            </button>
+          </div>
+          <div>
+            <div className="font-bold">{selectedRadio.name}</div>
+            <span className="line-clamp-1">
+              {selectedRadio.audioInfo.title}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       <Footer />
     </div>
   );
